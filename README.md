@@ -1,66 +1,68 @@
-# 🖨️ Sistema de Impressão de Tickets - EPSON M-T532
+# 🖨️ Sistema de Impressão de Tickets Térmicos
 
-Sistema de impressão de tickets/senhas para impressoras térmicas EPSON M-T532 com suporte a QR Code.
+Sistema de impressão de tickets/senhas para impressoras térmicas com suporte a QR Code e detecção automática de impressoras.
 
-## 📦 Arquivos do Projeto
+## 🚀 Instalação Rápida
 
-- `printer_app.py` - Código fonte principal
-- `printer_app.spec` - Arquivo de configuração para compilar
-- `printer_app.exe` - Executável pronto (na pasta dist/)
-- `requirements.txt` - Dependências Python
-- `README.md` - Este arquivo
+### Usando o Executável (Recomendado)
 
-## 🚀 Como Usar
-
-### Opção 1: Executável (Recomendado)
-
-1. Baixe o arquivo `printer_app.exe` da pasta `dist/`
+1. Baixe `app.exe` 
 2. Execute o arquivo
-3. Acesse `http://localhost:5000` no navegador
+3. Acesse `http://localhost:5000`
 
-### Opção 2: Via Python
+**Pronto!** O sistema busca automaticamente por impressoras com nome "ticket-printer" ou usa a padrão do Windows.
+
+### Usando Python
 
 ```bash
+# Instalar dependências
 pip install -r requirements.txt
+
+# Executar
 python printer_app.py
 ```
 
-## 📖 API
+## 📖 Endpoints da API
 
 ### Imprimir Ticket Simples
 ```
-GET /imprimir?code=SC72&services=Emissao%20de%20Senha&header=Santa%20Casa&footer=Bem-vindo
+GET /imprimir?code=001&services=Atendimento&header=Empresa&footer=Obrigado
 ```
 
 ### Imprimir Ticket com QR Code
 ```
-GET /imprimir/qrcode?code=SC72&services=Emissao%20de%20Senha&header=Santa%20Casa&footer=Scan%20o%20QR&qrcode=https://exemplo.com/SC72
+GET /imprimir/qrcode?code=001&services=Atendimento&header=Empresa&footer=Scan&qrcode=https://exemplo.com/001
 ```
 
-## 🔧 Compilar Executável
+## 🖨️ Configuração da Impressora
 
-Para gerar o arquivo .exe:
+O sistema busca automaticamente por:
+- Impressoras com nome contendo "ticket-printer" (maiúsculas/minúsculas)
+- Se não encontrar, usa a impressora padrão do Windows
+
+**Dica:** Compartilhe a impressora com o nome "Ticket-Printer" para detecção automática em rede.
+
+## 🔨 Gerar Executável
 
 ```bash
-pip install pyinstaller
-pyinstaller printer_app.spec
+python build_exe.py
 ```
 
-O executável será criado em `dist/printer_app.exe`
+O `app.exe` será gerado na pasta principal.
 
 ## ⚙️ Requisitos
 
-- Windows 10/11
-- Python 3.8+ (apenas para executar via código)
-- Impressora EPSON M-T532 configurada como padrão
+- **Sistema:** Windows 10/11
+- **Python:** 3.8+ (apenas para desenvolvimento)
+- **Impressora:** Térmica 80mm (local ou compartilhada)
 
 ## 🛠️ Tecnologias
 
-- Python + Flask
+- Flask + Waitress (servidor web)
 - Pillow (processamento de imagens)
 - qrcode (geração de QR codes)
-- pywin32 (integração com Windows)
+- pywin32 (integração Windows/impressoras)
 
 ---
 
-**Desenvolvido para EPSON M-T532**
+**Sistema genérico para impressoras térmicas de 80mm**
