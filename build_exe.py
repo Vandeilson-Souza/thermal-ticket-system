@@ -1,11 +1,13 @@
 """
 Script para gerar o executável (.exe) do sistema de impressão
 Usa PyInstaller para criar um arquivo executável único
+O executável é gerado como app.exe na pasta principal
 """
 
 import subprocess
 import sys
 import os
+import shutil
 
 def install_pyinstaller():
     """Instala o PyInstaller se não estiver instalado"""
@@ -34,10 +36,11 @@ def build_exe():
     command = [
         "pyinstaller",
         "--onefile",                    # Gera um único arquivo .exe
-        "--name=TicketPrinter",         # Nome do executável
+        "--name=app",                   # Nome do executável: app.exe
         "--icon=NONE",                  # Sem ícone personalizado
         "--clean",                      # Limpa arquivos temporários
         "--noconfirm",                  # Não pede confirmação
+        "--distpath=.",                 # Gera na pasta principal (raiz)
         "--add-data=ticket;ticket",     # Inclui pasta ticket
         "--hidden-import=win32print",   # Importações ocultas
         "--hidden-import=win32ui",
@@ -52,8 +55,9 @@ def build_exe():
     ]
     
     print("\n🔧 Configuração:")
-    print(f"   Nome: TicketPrinter.exe")
+    print(f"   Nome: app.exe")
     print(f"   Tipo: Executável único (--onefile)")
+    print(f"   Destino: Pasta principal (raiz do projeto)")
     print(f"   Arquivo: printer_app.py")
     print(f"   Pasta: ticket/ (incluída)")
     
@@ -67,29 +71,43 @@ def build_exe():
         if result.returncode == 0:
             print("✅ BUILD CONCLUÍDO COM SUCESSO!")
             print("="*60)
-            print("\n📁 Arquivos gerados:")
-            print(f"   Executável: dist\\TicketPrinter.exe")
-            print(f"   Especificação: TicketPrinter.spec")
-            print(f"   Build: build\\")
             
             # Verificar se o executável foi criado
-            exe_path = os.path.join("dist", "TicketPrinter.exe")
+            exe_path = "app.exe"
             if os.path.exists(exe_path):
                 size_mb = os.path.getsize(exe_path) / (1024 * 1024)
                 print(f"\n✅ Executável criado: {exe_path}")
                 print(f"📏 Tamanho: {size_mb:.2f} MB")
                 
+                # Copiar para dist/ (mantém compatibilidade)
+                dist_dir = "dist"
+                if not os.path.exists(dist_dir):
+                    os.makedirs(dist_dir)
+                    print(f"📁 Pasta dist/ criada")
+                
+                dist_exe = os.path.join(dist_dir, "app.exe")
+                try:
+                    shutil.copy2(exe_path, dist_exe)
+                    print(f"📋 Cópia criada em: {dist_exe}")
+                except Exception as e:
+                    print(f"⚠️  Não foi possível copiar para dist/: {e}")
+                
+                print("\n📁 Arquivos gerados:")
+                print(f"   Executável principal: app.exe (raiz do projeto)")
+                print(f"   Cópia em: dist\\app.exe")
+                print(f"   Especificação: app.spec")
+                print(f"   Build: build\\")
+                
                 print("\n" + "="*60)
                 print("🚀 COMO USAR:")
                 print("="*60)
-                print("1. Vá para a pasta: dist\\")
-                print("2. Execute: TicketPrinter.exe")
-                print("3. Acesse: http://localhost:5000")
-                print("4. Configure a impressora padrão no Windows")
-                print("\n💡 Dica: Copie o arquivo .exe para onde quiser usar")
+                print("1. Execute: app.exe (na pasta principal)")
+                print("2. Acesse: http://localhost:5000")
+                print("3. Configure a impressora padrão no Windows")
+                print("\n💡 Dica: Agora o app.exe está sempre na raiz para commits fáceis!")
                 print("="*60)
             else:
-                print("⚠️  Executável não encontrado em dist\\")
+                print("⚠️  Executável não encontrado na pasta principal")
         else:
             print("❌ ERRO NO BUILD!")
             print("="*60)
