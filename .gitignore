@@ -12,7 +12,6 @@ build/
 dist/
 *.manifest
 *.spec
-build_exe.py
 
 # IDE
 .vscode/
