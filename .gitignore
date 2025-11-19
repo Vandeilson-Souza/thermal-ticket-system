@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build
+build/
+*.manifest
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Tickets gerados
+ticket/
+!ticket/.gitkeep
+
+# Arquivos temporários
+*.log
+*.tmp
+*.temp
+*.bak
+
+# Arquivos de teste
+test_ticket_preview.py
+visualizar_previews.html
+
+# Outros arquivos Python desnecessários
+*.egg-info/
+.env
+venv/
+env/
+
+# Documentação extra
+COMO_SUBIR_GITHUB.md
+LICENSE
