@@ -11,12 +11,6 @@ import logging
 import urllib.parse
 import unicodedata
 
-# Configurações para impressora térmica genérica
-PRINTER_NAME = win32print.GetDefaultPrinter()  # Usa a impressora padrão do Windows
-PAPER_WIDTH_MM = 80
-DOTS_PER_MM = 8
-PAPER_WIDTH = PAPER_WIDTH_MM * DOTS_PER_MM
-
 # Configurar logging para mostrar todos os logs no terminal
 logging.basicConfig(
     level=logging.DEBUG,
@@ -26,6 +20,40 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+def find_ticket_printer():
+    """
+    Busca por impressoras com nome 'ticket-printer' ou 'Ticket-Printer' (case-insensitive)
+    Retorna o nome da primeira impressora encontrada ou a padrão se não encontrar
+    """
+    try:
+        # Listar todas as impressoras do sistema
+        printers = [printer[2] for printer in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
+        
+        logger.info(f"🔍 Buscando impressoras... {len(printers)} encontrada(s)")
+        
+        # Procurar por impressoras com 'ticket-printer' no nome (case-insensitive)
+        for printer_name in printers:
+            if 'ticket-printer' in printer_name.lower():
+                logger.info(f"✅ Impressora ticket-printer encontrada: {printer_name}")
+                return printer_name
+        
+        # Se não encontrou, usa a padrão
+        default_printer = win32print.GetDefaultPrinter()
+        logger.warning(f"⚠️  Nenhuma impressora 'ticket-printer' encontrada")
+        logger.info(f"📍 Usando impressora padrão: {default_printer}")
+        return default_printer
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao buscar impressoras: {e}")
+        # Fallback para impressora padrão
+        return win32print.GetDefaultPrinter()
+
+# Configurações para impressora térmica genérica
+PRINTER_NAME = find_ticket_printer()
+PAPER_WIDTH_MM = 80
+DOTS_PER_MM = 8
+PAPER_WIDTH = PAPER_WIDTH_MM * DOTS_PER_MM
 
 def remove_accents(text):
     """Remove acentos de um texto para compatibilidade com impressoras térmicas"""
