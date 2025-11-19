@@ -2,10 +2,17 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
+.env
+venv/
+env/
 
-# Build
+# Build e arquivos gerados
 build/
+dist/
 *.manifest
+*.spec
+build_exe.py
 
 # IDE
 .vscode/
@@ -33,12 +40,11 @@ ticket/
 test_ticket_preview.py
 visualizar_previews.html
 
-# Outros arquivos Python desnecessários
-*.egg-info/
-.env
-venv/
-env/
-
 # Documentação extra
 COMO_SUBIR_GITHUB.md
 LICENSE
+EXECUTAVEL-PRONTO.md
+
+# Executáveis e zips
+main.exe
+main.zip
