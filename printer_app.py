@@ -10,6 +10,10 @@ from PIL import ImageWin
 import logging
 import urllib.parse
 import unicodedata
+import sys
+import msvcrt
+import threading
+import time
 
 # Configurar logging para mostrar todos os logs no terminal
 logging.basicConfig(
@@ -531,6 +535,237 @@ class ThermalPrinter:
 
 app = Flask(__name__)
 
+def test_print_simple():
+    """Executa teste de impressão simples"""
+    try:
+        logger.info("\n" + "="*60)
+        logger.info("🧪 TESTE DE IMPRESSÃO SIMPLES")
+        logger.info("="*60)
+        
+        printer = ThermalPrinter()
+        timestamp = datetime.now().strftime("%H%M%S")
+        created_date = datetime.now().strftime("%d/%m/%Y %H:%M")
+        code = f"TEST{timestamp}"
+        services = "Teste de Impressao"
+        header = "TESTE DO SISTEMA"
+        footer = "Teste realizado com sucesso!"
+        
+        logger.info(f"📋 Código: {code}")
+        logger.info(f"📋 Serviços: {services}")
+        logger.info(f"📝 Header: {header}")
+        logger.info(f"📝 Footer: {footer}")
+        logger.info("\n⏳ Enviando para impressora...")
+        
+        # Primeiro tenta ESC/POS
+        success = printer.print_text_ticket(created_date, code, services, header, footer)
+        if not success:
+            logger.info("🔄 Fallback para imagem...")
+            success = printer.print_image_ticket(created_date, code, services, header, footer)
+        
+        if success:
+            logger.info("✅ Teste de impressão concluído com sucesso!")
+            return True
+        else:
+            logger.error("❌ Falha no teste de impressão")
+            return False
+            
+    except Exception as e:
+        logger.error(f"❌ Erro no teste: {e}")
+        return False
+
+def test_print_qrcode():
+    """Executa teste de impressão com QR Code"""
+    try:
+        logger.info("\n" + "="*60)
+        logger.info("🧪 TESTE DE IMPRESSÃO COM QR CODE")
+        logger.info("="*60)
+        
+        printer = ThermalPrinter()
+        timestamp = datetime.now().strftime("%H%M%S")
+        created_date = datetime.now().strftime("%d/%m/%Y %H:%M")
+        code = f"QR{timestamp}"
+        services = "Teste de Impressao com QR Code"
+        header = "TESTE QR CODE"
+        footer = "Scan o QR Code para testar!"
+        qrcode_data = f"https://teste.com/ticket/{code}"
+        
+        logger.info(f"📋 Código: {code}")
+        logger.info(f"📋 Serviços: {services}")
+        logger.info(f"📝 Header: {header}")
+        logger.info(f"📝 Footer: {footer}")
+        logger.info(f"🔗 QR Data: {qrcode_data}")
+        logger.info("\n⏳ Enviando para impressora...")
+        
+        # Primeiro tenta ESC/POS
+        success = printer.print_qrcode_ticket(created_date, code, services, header, footer, qrcode_data)
+        if not success:
+            logger.info("🔄 Fallback para imagem...")
+            success = printer.print_image_ticket(created_date, code, services, header, footer, qrcode_data)
+        
+        if success:
+            logger.info("✅ Teste de QR Code concluído com sucesso!")
+            return True
+        else:
+            logger.error("❌ Falha no teste de QR Code")
+            return False
+            
+    except Exception as e:
+        logger.error(f"❌ Erro no teste: {e}")
+        return False
+
+def test_printer_connection():
+    """Testa a conexão com a impressora"""
+    try:
+        logger.info("\n" + "="*60)
+        logger.info("🔍 TESTE DE CONEXÃO COM IMPRESSORA")
+        logger.info("="*60)
+        
+        logger.info(f"📍 Impressora configurada: {PRINTER_NAME}")
+        
+        # Tentar abrir a impressora
+        hprinter = win32print.OpenPrinter(PRINTER_NAME)
+        win32print.ClosePrinter(hprinter)
+        
+        logger.info("✅ Impressora encontrada e acessível!")
+        logger.info("✅ Conexão OK!")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao conectar com impressora: {e}")
+        logger.warning("💡 Verifique se a impressora está conectada e configurada")
+        return False
+
+def get_key():
+    """Captura uma tecla pressionada (Windows)"""
+    if msvcrt.kbhit():
+        key = msvcrt.getch()
+        # Tab = b'\t', Enter = b'\r', ESC = b'\x1b', números = b'1', b'2', etc.
+        return key
+    return None
+
+def clear_screen():
+    """Limpa a tela do terminal"""
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def print_menu():
+    """Exibe o menu interativo"""
+    print("\n" + "="*60)
+    print("🖨️  SISTEMA DE IMPRESSÃO TÉRMICA - MODO INTERATIVO")
+    print("="*60)
+    print(f"📍 Impressora: {PRINTER_NAME}")
+    print("="*60)
+    print("\n📋 MENU DE OPÇÕES:")
+    print("  [Tab] ou [1] - Teste de impressão simples")
+    print("  [2]          - Teste de impressão com QR Code")
+    print("  [3]          - Testar conexão com impressora")
+    print("  [4]          - Iniciar servidor web")
+    print("  [Q] ou [ESC] - Sair")
+    print("\n" + "="*60)
+    print("💡 Pressione uma tecla para continuar...")
+    print("="*60)
+
+def interactive_mode():
+    """Modo interativo no terminal"""
+    clear_screen()
+    
+    logger.info("\n" + "="*60)
+    logger.info("🖨️  MODO INTERATIVO ATIVADO")
+    logger.info("="*60)
+    
+    # Verificar impressora
+    try:
+        hprinter = win32print.OpenPrinter(PRINTER_NAME)
+        win32print.ClosePrinter(hprinter)
+        logger.info(f"✅ Impressora encontrada: {PRINTER_NAME}")
+    except:
+        logger.warning(f"⚠️  Impressora pode não estar acessível: {PRINTER_NAME}")
+    
+    while True:
+        print_menu()
+        
+        # Aguardar tecla
+        key = None
+        while key is None:
+            key = get_key()
+            if key is None:
+                import time
+                time.sleep(0.1)  # Pequeno delay para não sobrecarregar CPU
+        
+        # Processar tecla
+        if key == b'\t' or key == b'1':  # Tab ou 1
+            print("\n▶️  Executando teste de impressão simples...")
+            test_print_simple()
+            print("\n✅ Pressione qualquer tecla para continuar...")
+            msvcrt.getch()
+            
+        elif key == b'2':
+            print("\n▶️  Executando teste de impressão com QR Code...")
+            test_print_qrcode()
+            print("\n✅ Pressione qualquer tecla para continuar...")
+            msvcrt.getch()
+            
+        elif key == b'3':
+            print("\n▶️  Testando conexão com impressora...")
+            test_printer_connection()
+            print("\n✅ Pressione qualquer tecla para continuar...")
+            msvcrt.getch()
+            
+        elif key == b'4':
+            print("\n▶️  Iniciando servidor web...")
+            print("📍 Servidor será iniciado em http://localhost:5000")
+            print("💡 Pressione Ctrl+C para parar o servidor")
+            print("\n" + "="*60)
+            # Iniciar servidor web
+            logger.info("\n" + "="*60)
+            logger.info("🖨️  Sistema de Impressão Térmica")
+            logger.info("="*60)
+            logger.info(f"📍 Impressora: {PRINTER_NAME}")
+            logger.info("📍 URLs:")
+            logger.info("   http://localhost:5000/ - Página de teste")
+            logger.info("   http://localhost:5000/imprimir - Teste texto") 
+            logger.info("   http://localhost:5000/imprimir/qrcode - Teste QR code")
+            logger.info("="*60)
+            serve(app, host='0.0.0.0', port=5000, threads=1)
+            break
+            
+        elif key == b'q' or key == b'Q' or key == b'\x1b':  # Q ou ESC
+            print("\n👋 Encerrando modo interativo...")
+            logger.info("👋 Modo interativo encerrado")
+            break
+            
+        else:
+            print(f"\n⚠️  Tecla não reconhecida. Use Tab, 1-4, Q ou ESC")
+            import time
+            time.sleep(1)
+
+def keyboard_listener():
+    """Thread que escuta teclas em background - Tab executa teste de QR Code"""
+    while True:
+        try:
+            if msvcrt.kbhit():
+                key = msvcrt.getch()
+                if key == b'\t':  # Tab pressionado
+                    print("\n" + "="*60)
+                    print("▶️  TAB PRESSIONADO - Executando teste de impressão com QR Code...")
+                    print("="*60)
+                    success = test_print_qrcode()
+                    if success:
+                        print("\n" + "="*60)
+                        print("✅ TESTE CONCLUÍDO COM SUCESSO!")
+                        print("="*60)
+                    else:
+                        print("\n" + "="*60)
+                        print("❌ TESTE FALHOU - Verifique os logs acima")
+                        print("="*60)
+                    print("\n💡 Servidor continuando... Pressione Tab novamente para outro teste")
+                    print("="*60 + "\n")
+            time.sleep(0.1)  # Pequeno delay para não sobrecarregar CPU
+        except KeyboardInterrupt:
+            break
+        except Exception as e:
+            # Ignorar erros silenciosamente para não interromper o servidor
+            pass
+
 def decode_url_parameter(param):
     """Decodifica parâmetros URL que podem conter acentos"""
     if param:
@@ -666,23 +901,37 @@ def index():
     """
 
 if __name__ == '__main__':
-    logger.info("\n" + "="*60)
-    logger.info("🖨️  Sistema de Impressão Térmica")
-    logger.info("="*60)
-    logger.info(f"📍 Impressora: {PRINTER_NAME}")
-    logger.info("📍 URLs:")
-    logger.info("   http://localhost:5000/ - Página de teste")
-    logger.info("   http://localhost:5000/imprimir - Teste texto") 
-    logger.info("   http://localhost:5000/imprimir/qrcode - Teste QR code")
-    logger.info("="*60)
-    
-    # Verificar se a impressora existe
-    try:
-        hprinter = win32print.OpenPrinter(PRINTER_NAME)
-        win32print.ClosePrinter(hprinter)
-        logger.info("✅ Impressora encontrada e acessível")
-    except:
-        logger.error("❌ Impressora não encontrada ou inacessível")
-        logger.warning("💡 Configure a impressora padrão no Windows")
-    
-    serve(app, host='0.0.0.0', port=5000, threads=1)
+    # Verificar argumentos de linha de comando
+    if len(sys.argv) > 1 and sys.argv[1] in ['--interactive', '-i', '/i']:
+        # Modo interativo
+        interactive_mode()
+    else:
+        # Modo servidor web (padrão) com listener de teclas
+        logger.info("\n" + "="*60)
+        logger.info("🖨️  Sistema de Impressão Térmica")
+        logger.info("="*60)
+        logger.info(f"📍 Impressora: {PRINTER_NAME}")
+        logger.info("📍 URLs:")
+        logger.info("   http://localhost:5000/ - Página de teste")
+        logger.info("   http://localhost:5000/imprimir - Teste texto") 
+        logger.info("   http://localhost:5000/imprimir/qrcode - Teste QR code")
+        logger.info("="*60)
+        logger.info("💡 Pressione TAB no terminal para testar impressão com QR Code")
+        logger.info("="*60)
+        
+        # Verificar se a impressora existe
+        try:
+            hprinter = win32print.OpenPrinter(PRINTER_NAME)
+            win32print.ClosePrinter(hprinter)
+            logger.info("✅ Impressora encontrada e acessível")
+        except:
+            logger.error("❌ Impressora não encontrada ou inacessível")
+            logger.warning("💡 Configure a impressora padrão no Windows")
+        
+        # Iniciar thread de listener de teclas em background
+        keyboard_thread = threading.Thread(target=keyboard_listener, daemon=True)
+        keyboard_thread.start()
+        logger.info("⌨️  Listener de teclas ativado (Tab = teste QR Code)")
+        logger.info("="*60 + "\n")
+        
+        serve(app, host='0.0.0.0', port=5000, threads=1)
